@@ -91,7 +91,7 @@ def create_playlist(youtube, minimal_score, status="public"):
     i = look_for_playlist(youtube, title)
     if i:
         print 'delete playlist', i
-        youtube.playlists().delete(id=i) 
+        youtube.playlists().delete(id=i).execute()
     playlists_insert_response = youtube.playlists().insert(
         part="snippet,status",
         body=dict(
