@@ -57,3 +57,7 @@ docs/_build/
 
 # PyBuilder
 target/
+
+# auth
+client_secrets.json
+hn_playlist.py-oauth2.json
