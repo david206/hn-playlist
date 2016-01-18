@@ -29,7 +29,7 @@ CLIENT_SECRETS_FILE = "client_secrets.json"
 MISSING_CLIENT_SECRETS_MESSAGE = """
 WARNING: Please configure OAuth 2.0
 
-To make this sample run you will need to populate the client_secrets.json file
+To make this script run you will need to populate the client_secrets.json file
 found at:
 
    %s
@@ -107,17 +107,16 @@ def create_playlist(youtube, minimal_score, status="public"):
 
 
 def extract_id(f):
-    return f['link'].split('=')[1].split('&')[0]
+    return f['link'].split('=')[1].split('&')[0].split('/')[0]
 
 
 def main(args):
     minimal_score = args.minimal_score
     youtube = build_youtube()
     hn_playlist_id = create_playlist(youtube, minimal_score, args.status)
-    feed_url = 'http://hnrss.org/newest?q=www.youtube.com&search_attrs=url&points={}'.format(minimal_score)
+    feed_url = 'http://hnrss.org/newest?q=www.youtube.com\/watch&search_attrs=url&points={}'.format(minimal_score)
     feed = feedparser.parse(feed_url)
     
-    ids = [f['link'].split('=')[1].split('&')[0] for f in feed['entries']]
     for f in feed['entries']:
         try:
             add_video_to_playlist(youtube, extract_id(f), hn_playlist_id)
@@ -130,6 +129,6 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--minimal_score', type=int, default=30)
-    parser.add_argument('--status', choices=['public', 'private'], default='private')
+    parser.add_argument('--minimal_score', type=int, default=30, help='the minimal score of youtube link to be included on the playlist (default: %(default)s)')
+    parser.add_argument('--status', choices=['public', 'private'], default='private', help='the sharing status of the created playlist (default: %(default)s)')
     main(parser.parse_args())
