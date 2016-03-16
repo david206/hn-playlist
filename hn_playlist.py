@@ -114,9 +114,8 @@ def main(args):
     minimal_score = args.minimal_score
     youtube = build_youtube()
     hn_playlist_id = create_playlist(youtube, minimal_score, args.status)
-    feed_url = 'http://hnrss.org/newest?q=www.youtube.com\/watch&search_attrs=url&points={}'.format(minimal_score)
+    feed_url = 'http://hnrss.org/newest?q=www.youtube.com&search_attrs=url&points={}'.format(minimal_score)
     feed = feedparser.parse(feed_url)
-    
     for f in feed['entries']:
         try:
             add_video_to_playlist(youtube, extract_id(f), hn_playlist_id)
