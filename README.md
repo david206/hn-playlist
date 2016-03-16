@@ -1,5 +1,6 @@
 # hn-playlist
 Script that create Youtube playlist containing popular videos shared on hackernews.
+For example: https://www.youtube.com/playlist?list=PLplc2Yc-SdwWDy0YYCCo8GuPuMrJ1kGFl
 
 ## prerequisites
 To run this script you will need to add the file client_secrets.json from Cloud Console: https://cloud.google.com/console to the script console.
