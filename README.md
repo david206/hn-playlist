@@ -18,6 +18,7 @@ In addition you will need:
 * ```pip install feedparser```
 * ```pip install --upgrade httplib2```
 * ```pip install --upgrade google-api-python-client```
+* ```pip install isodate```
 
 ## usage
 ```
