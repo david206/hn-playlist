@@ -1,9 +1,11 @@
 #!/usr/bin/python
 
+import datetime
 import httplib2
 import os
 import sys
 import pprint
+import isodate
 from apiclient.discovery import build
 from apiclient.errors import HttpError
 from oauth2client.client import flow_from_clientsecrets
@@ -62,6 +64,29 @@ def build_youtube():
             http=credentials.authorize(httplib2.Http()))
     return youtube
 
+
+# Remove keyword arguments that are not set
+def remove_empty_kwargs(**kwargs):
+    good_kwargs = {}
+    if kwargs is not None:
+        for key, value in kwargs.iteritems():
+            if value:
+                good_kwargs[key] = value
+    return good_kwargs
+
+
+def videos_list_by_id(service, **kwargs):
+    kwargs = remove_empty_kwargs(**kwargs) 
+    results = service.videos().list(**kwargs).execute()
+    return results
+
+def video_duration(youtube, videoID):
+    results = videos_list_by_id(youtube, part='contentDetails', id=videoID)
+    items = results['items']
+    content = items[0]['contentDetails']
+    return isodate.parse_duration(content['duration'])
+
+
 def add_video_to_playlist(youtube,videoID,playlistID):
     add_video_request=youtube.playlistItems().insert(
         part="snippet",
@@ -112,22 +137,33 @@ def extract_id(f):
 
 def main(args):
     minimal_score = args.minimal_score
+    minimal_duration = datetime.timedelta(minutes=args.minimal_duration)
+    maximal_duration = datetime.timedelta(minutes=args.maximal_duration)
     youtube = build_youtube()
+    total_time = datetime.timedelta(0)
     hn_playlist_id = create_playlist(youtube, minimal_score, args.status)
     feed_url = 'http://hnrss.org/newest?q=www.youtube.com&search_attrs=url&points={}'.format(minimal_score)
     feed = feedparser.parse(feed_url)
     for f in feed['entries']:
         try:
-            add_video_to_playlist(youtube, extract_id(f), hn_playlist_id)
-            print f['title'], '\t', f['published']
+            duration = video_duration(youtube, extract_id(f))
+            if minimal_duration < duration < maximal_duration:
+                add_video_to_playlist(youtube, extract_id(f), hn_playlist_id)
+                total_time += duration
+                print f['title'], '\t', f['published']
+            else:
+                print f['title'], '\t', 'duration is not in limits'
         except:
             print "*** error on ", f['title'], extract_id(f)
     
+    print "total duration: ", total_time
     playlist_url = 'https://www.youtube.com/playlist?list={}'.format(hn_playlist_id)
     webbrowser.open(playlist_url)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--minimal_score', type=int, default=30, help='the minimal score of youtube link to be included on the playlist (default: %(default)s)')
+    parser.add_argument('--minimal_duration', type=int, default=0, help='the minimal duration in minutes of youtube video to be included on the playlist: %(default)s)')
+    parser.add_argument('--maximal_duration', type=int, default=180, help='the maximal duration in minutes of youtube video to be included on the playlist: %(default)s)')
     parser.add_argument('--status', choices=['public', 'private'], default='private', help='the sharing status of the created playlist (default: %(default)s)')
     main(parser.parse_args())
